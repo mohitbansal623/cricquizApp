@@ -1,0 +1,1374 @@
+<?php
+/**
+  * @file
+  * This file is for updating some options of node while creation
+  */
+
+  /**
+   * Implements hook_node_presave()
+   */
+  function mynode_update_node_update($node) {
+    if ($node->promote == 1 && $node->original->status == 0 && $node->status == 1) {
+      global $base_url;
+      global $base_path;
+      $user_id = $node->uid;
+      $user_details = getMailID($user_id);
+      $nid = $node->nid;
+      $blog_path = drupal_get_path_alias('node/' . $node->nid);
+      $blog_link = $base_url . $base_path . $blog_path;
+      $message = 'Dear ' . $user_details['name'] . ','  . "\n\n" . 'Your blog has been published. Here is your link:-' . $blog_link . "\n" . 'Keep sharing your blogs.' . "\n\n" . '-- Er. Mohit Bansal Team';
+      // Send the email.
+      $params = array(
+        'subject' => t('Published Blog'),
+        'body' => t($message),
+      );
+
+      drupal_mail('mynode_update', 'mail', $user_details['mail'], language_default(), $params);
+    }
+  }
+
+  /**
+   * Implements hook_node_insert()
+   */
+  function mynode_update_node_insert($node) {
+
+    if ($node->type == 'create_blog') {
+      $node->promote = 0;
+      $node->status = NODE_NOT_PUBLISHED;
+    }
+  }
+
+  /**
+   * Retrieve mail id of the user whose blog has to be published
+   */
+  function getMailID($user_id) {
+    $user = array();
+    $result = db_select('users', 'u')
+    ->fields('u', array('mail', 'name'))
+    ->condition('uid', $user_id, '=')
+    ->execute()
+    ->fetchAssoc();
+
+    $user['mail'] = $result['mail'];
+    $user['name'] = $result['name'];
+    return $user;
+  }
+
+  /**
+ * Implements hook_mail for module_name.
+ */
+function mynode_update_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'mail':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['body'];
+      break;
+  }
+}
+
+
+function mynode_update_custom_theme() {
+  if (drupal_is_front_page()) {
+    return 'blog_revamp';
+  }
+}
+
+
+
+
+function mynode_update_services_resources() {
+
+return array(
+    'signin' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Content Page',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'checkLogin',
+         'args' => array(
+           array(
+             'name' => 'username',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'username'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'password',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'password'),
+             'optional' => TRUE,
+           ),
+           
+           
+         ),
+         'access callback' => 'checkLoginAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   
+   // Create User API
+   
+   'signup' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Content Page',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'createUser',
+         'args' => array(
+             
+           array(
+             'name' => 'username',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'username'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'email',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'email'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'password',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'password'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'number',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'number'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'city',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'city'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'state',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'state'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'pin',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'pin'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'user_referal_code',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'user_referal_code'),
+             'optional' => TRUE,
+           ),
+           
+           
+         ),
+         'access callback' => 'checkCreateUserAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   
+     // Get List of Matches
+    'getMatches' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Matches',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getlistMatches',
+         'args' => array(
+             
+           array(
+             'name' => 'username',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'username'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkMatchAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get List of Questions
+    'getQuestions' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Questions',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getlistQuestions',
+         'args' => array(
+             
+           array(
+             'name' => 'quizid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'quizid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkQuizAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   
+   // Get List of Quizes
+    'getQuiz' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Quiz',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getlistQuiz',
+         'args' => array(
+             
+           array(
+             'name' => 'quizid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'quizid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkQuizAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // Get List of Quizes
+    'getCricketFormData' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Cricket Form Data',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getCricketFormData',
+         'args' => array(
+             
+           array(
+             'name' => 'matchid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'matchid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get List of Quizes
+    'getCricketFormData' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Cricket Form Data',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getCricketFormData',
+         'args' => array(
+             
+           array(
+             'name' => 'matchid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'matchid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+    // Get List of Contests belongs to particular Match
+    'getListofContests' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get List of Contests',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getListofContests',
+         'args' => array(
+             
+           array(
+             'name' => 'matchid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'matchid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // Get List of Contests belongs to particular Quiz
+    'getListQuizContests' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get List of QUiz Contests',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getListQuizContests',
+         'args' => array(
+             
+           array(
+             'name' => 'quizid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'quizid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get Quiz Answers submissions.
+    'getQuizContestsSubmissions' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Submissions of QUiz Contests',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getQuizContestsSubmissions',
+         'args' => array(
+    
+             
+           array(
+             'name' => 'answer_list',
+             'type' => 'array',
+             'description' => 'url of page',
+             'source' => array('data' => 'answer_list'),
+             'optional' => FALSE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // Get Quiz Answers submissions.
+    'getMatchSubmissions' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'SET Submissions of MATCH FORMS',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'setMatchSubmissions',
+         'args' => array(
+             
+             
+           array(
+             'name' => 'answer_list',
+             'type' => 'array',
+             'description' => 'url of page',
+             'source' => array('data' => 'answer_list'),
+             'optional' => FALSE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // JOIN CONTEST MATCH
+    'joinContestMatch' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'SET Submissions of MATCH FORMS',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'joinMatchContest',
+         'args' => array(
+           array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'match_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'match_id'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // SHOW ENTRY DATA
+    'ShowEntryData' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Show Entry Data',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getShowEntryData',
+         'args' => array(
+           array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'match_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'match_id'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // SHOW ENTRY DATA
+    'checkEntry' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Show Entry Data',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'check_entry_exists',
+         'args' => array(
+          
+            array(
+             'name' => 'match_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'match_id'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+    // Get Quiz Answers submissions.
+    'getFinalResult' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'get FInal Result of User',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getResult',
+         'args' => array(
+             
+           array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // Get Quiz Answers submissions.
+    'updateAmountBasedonPoints' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'updateAmountBasedonPoints',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'update_quiz_winning_amount',
+         'args' => array(
+             
+           array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+       // Get Quiz Answers submissions.
+    'getContestWinners' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getContestWinners',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getWinnersQuizContest',
+         'args' => array(
+             
+           array(
+             'name' => 'quiz_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'quiz_id'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // Get User PRofile
+    'getUserProfile' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get User PRofile',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getuserData',
+         'args' => array(
+             
+           array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+   // Get User refrered data
+    'getreferal' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getreferalUsers',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getreferalUsers',
+         'args' => array(
+             
+           array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+      // Get User refrered data
+    'getCashBonusUser' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getreferalUsers',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'get_cash_bonus_user',
+         'args' => array(
+             
+           array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+    // Get User refrered data
+    'getWinAmountUser' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getreferalUsers',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'get_win_amount_user',
+         'args' => array(
+             
+           array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get User Contests Participation Data
+    'getUserContest' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get User PRofile',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getUserContestData',
+         'args' => array(
+             
+           array(
+             'name' => 'uid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'uid'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get User Contests Participation Data
+    'getMatchWinnerList' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getMatchWinnerList',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getMatchContestWinnerData',
+         'args' => array(
+             
+           array(
+             'name' => 'match_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'match_id'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get QUIZ WINING CRITERIA
+    'getWinningRanksPrize' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getWinningRanksPrize',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getQuizWinningCriteria',
+         'args' => array(
+             
+           array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   // Get QUIZ WINING CRITERIA
+    'getMatchWinningCriteria' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'getMatchWinningCriteria',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'getMatchWinCriteria',
+         'args' => array(
+             
+           array(
+             'name' => 'contest_id',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'contest_id'),
+             'optional' => TRUE,
+           ),
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+      // Generating checksum for Payment
+    'generateChecksum' => array(
+     'operations' => array(
+       'create' => array(
+         'help' => 'Get Checksum Payment',
+         'file' => array(
+           'type' => 'inc',
+           'module' => 'mynode_update',
+           'name' => 'mynode_update',
+         ),
+         'callback' => 'generating_checksum',
+         'args' => array(
+             
+          array(
+             'name' => 'mid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'mid'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'orderid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'orderid'),
+             'optional' => TRUE,
+           ),
+           
+            
+            array(
+             'name' => 'custid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'custid'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'channelid',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'channelid'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'amount',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'amount'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'website',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'website'),
+             'optional' => TRUE,
+           ),
+           
+            array(
+             'name' => 'url',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'url'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'industry',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'industry'),
+             'optional' => TRUE,
+           ),
+           
+           array(
+             'name' => 'merchantkey',
+             'type' => 'string',
+             'description' => 'url of page',
+             'source' => array('data' => 'merchantkey'),
+             'optional' => TRUE,
+           ),
+           
+         ),  
+         'access callback' => 'checkCricketFormAccess',
+         'access arguments append' => TRUE,
+       ),
+     ),
+   ),
+   
+   
+ );  
+    
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function mynode_update_menu() {
+    $items['admin/config/match-results'] = array(
+    'title' => 'Match Result Data',
+    'description' => 'Fill the results after match is over',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('custom_match_configuration'),
+    'access callback' => array('check_role'),
+  );
+  
+  return $items;
+}
+
+function check_role() {
+  global $user;
+  $roles = $user->roles;
+
+  if (in_array('Admin', $roles) || in_array('administrator', $roles)) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+
+function custom_match_configuration($form, &$form_state) {
+  $form['match_results'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Match Results',
+  );
+
+  $form['match_results']['current_match_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Match ID'),
+    '#description' => t('Enter Match ID for which you want results. Match ID is there in Admin Interface along with the list of matches.'),
+    '#default_value' => variable_get('current_match_id', ''),
+    '#required' => TRUE,
+  );
+  
+//   $form['match_results']['current_contest_id'] = array(
+//     '#type' => 'textfield',
+//     '#title' => t('Contest ID'),
+//     '#description' => t('Enter Contest ID for which you want results.'),
+//     '#default_value' => variable_get('current_contest_id', ''),
+//     '#required' => TRUE,
+//   );
+  
+  
+  
+  $form['match_results']['match_toss'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Match Toss'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('match_toss', ''),
+    '#required' => TRUE,
+  );
+  
+  $form['match_results']['match_powerplay_runs'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest Powerplay Runs'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('match_powerplay_runs', ''),
+    '#required' => TRUE,
+  );
+
+
+  $form['match_results']['highest_wicket_fall'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest Wicket Fall'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_wicket_fall', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['highest_fours_match'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest 4s in match'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_fours_match', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['highest_six_match'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest 6s in match'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_six_match', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['extra_runs_given'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Extra runs given'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('extra_runs_given', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['top_batsman_match'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Top Batsman in Match'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('top_batsman_match', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['top_bowler_match'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Top Bowler in Match'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('top_bowler_match', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['highest_partnership'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest Opening Partnership'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_partnership', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['highest_catch_without_keeper'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest Catch Out'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_catch_without_keeper', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['highest_dismissal_keeper'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest Dismissal by Keeper'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_dismissal_keeper', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['player_score_50'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Player Score 50'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('player_score_50', ''),
+    '#required' => TRUE,
+  );
+  
+   $form['match_results']['score_50+'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Player Score 50'),
+    '#description' => t('Fill A, B, C and D any one'),
+    '#default_value' => variable_get('score_50+', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['highest_poweplay_4s'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Highest Powerplay Boundaries'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('highest_poweplay_4s', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['top_batsman_team_a'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Top Batsman Team A'),
+    '#description' => t('Fill any one from A to K'),
+    '#default_value' => variable_get('top_batsman_team_a', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['top_batsman_team_b'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Top Batsman Team B'),
+    '#description' => t('Fill any one from A to K'),
+    '#default_value' => variable_get('top_batsman_team_b', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['top_bowler_team_a'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Top Bowler Team A'),
+    '#description' => t('Fill any one from A to K'),
+    '#default_value' => variable_get('top_bowler_team_a', ''),
+    '#required' => TRUE,
+  );
+
+  $form['match_results']['top_bowler_team_b'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Top Bowler Team B'),
+    '#description' => t('Fill any one from A to K'),
+    '#default_value' => variable_get('top_bowler_team_b', ''),
+    '#required' => TRUE,
+  );
+  
+  $form['match_results']['man_of_the_match'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Man of the Match'),
+    '#description' => t('Fill any one from A to K'),
+    '#default_value' => variable_get('man_of_the_match', ''),
+    '#required' => TRUE,
+  );
+
+  
+    $form['match_results']['match_winner'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Match Winner'),
+    '#description' => t('Fill A if Team A wins and B if Team B'),
+    '#default_value' => variable_get('match_winner', ''),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+
+function getMatchSubmissions($submissions) {
+ foreach($submissions as $key =>  $value) {
+if ($key == "quizid") {
+$matchid = $value;
+}
+elseif ($key == "uid") {
+$uid = $value;
+}
+else {
+foreach($value as $keys => $ans) {
+$nid = db_insert('betting')
+      ->fields(array(
+        'uid' => $uid,
+        'nid' => $matchid,
+        'form_id' => $ans['questionId'],
+        'select_value' => $ans['selectedAnswer'],
+      ))
+      ->execute();
+
+}
+}
+}
+
+$message = array('status' => 'Your responses are recorded, JOIN THE CONTEST');
+
+return $message;
+
+}
+
+function joinContestMatch($contest_id, $match_id, $uid) {
+ $fee = 0;
+$entryfee = db_select('field_data_field_entry_fee', 'fee')
+           ->fields('fee', array('field_entry_fee_value'))
+           ->condition('fee.entity_id', $contest_id);
+$fee = $entryfee->execute()->fetchField();
+
+if (empty($fee)) {
+  $fee = 0;
+}
+$nid = db_insert('Match_contests_submit_info')
+      ->fields(array(
+        'contest_id' => $contest_id,
+        'uid' => $uid,
+        'match_id' => $match_id,
+        'entry_amount' => $fee,
+      ))
+      ->execute();
+    
+      $num_updated = db_update('betting')
+    ->fields(array(
+      'contest_id' => $contest_id,
+    ))
+    ->condition('nid', $match_id, '=')
+    ->condition('uid', $uid, '=')
+    ->execute();
+
+      $message = array('status' => 'Thanks for Joining the contest' . $contest_id .  ', You will to know about the results');
+      
+      return $message;
+
+}
+
+function getFinalResult() {
+
+  $match_id =  variable_get('current_match_id', '');
+  $contest_id =  variable_get('current_contest_id', '');
+  $final_answers = array(
+        1 => variable_get('match_toss', ''),
+        2 => variable_get('match_powerplay_runs', ''),
+        3 => variable_get('highest_wicket_fall', ''),
+        4 =>  variable_get('highest_fours_match', ''),
+        5 => variable_get('highest_six_match', ''),
+        6 => variable_get('extra_runs_given', ''),
+        7 => variable_get('top_batsman_match', ''),
+        8 => variable_get('top_bowler_match', ''),
+        9 => variable_get('highest_partnership', ''),
+        10 => variable_get('highest_catch_without_keeper', ''),
+        11 => variable_get('highest_dismissal_keeper', ''),
+        12 => variable_get('player_score_50', ''),
+        13 =>  variable_get('score_50+', ''),
+        14 => variable_get('highest_poweplay_4s', ''),
+        15 => variable_get('top_batsman_team_a', ''),
+        16 => variable_get('top_batsman_team_b', ''),
+        17 => variable_get('top_bowler_team_a', ''),
+        18 => variable_get('top_bowler_team_b', ''),
+        19 => variable_get('man_of_the_match', ''),
+        20 => variable_get('match_winner', ''),
+      );
+
+    $query = db_select('betting', 'bet')
+            ->fields('bet', array('form_id', 'select_value'))
+            ->condition('bet.nid' , $match_id)
+            ->condition('bet.uid', $uid)
+            ->orderby('bet.form_id')
+            ->range(0,10);
+   $results = $query->execute()->fetchAllAssoc('form_id');
+
+     $user_answers = array();
+  foreach($results as $key => $value) {
+    $user_answers[$key] = $value->select_value;
+  }
+
+  $correct_answers = array_intersect($final_answers, $user_answers);
+  $correct_answers_count = count($correct_answers);
+
+  $entryfee = db_select('field_data_field_entry_fee', 'fee')
+           ->fields('fee', array('field_entry_fee_value'))
+           ->condition('fee.entity_id', $contest_id);
+$fee = $entryfee->execute()->fetchField();
+
+if (empty($fee)) {
+  $fee = 0;
+}
+
+switch ($correct_answers_count) {
+  case 10:
+      $wining_amount = 5 * $fee;
+    break;
+
+  case 9:
+      $wining_amount = 4 * $fee;
+    break;
+    
+  case 8:
+      $wining_amount = 3 * $fee;
+    break;
+    
+   case 7:
+      $wining_amount = 2 * $fee;
+    break;     
+  
+  case 6:
+      $wining_amount = 1 * $fee;
+    break;
+  default:
+    $wining_amount = 0;
+    break;
+}
+
+$num_updated = db_update('betting')
+    ->fields(array(
+      'wining_amount' => $wining_amount ,
+    ))
+    ->condition('match_id', $match_id, '=')
+    ->condition('uid', $uid, '=')
+    ->condition('contest_id', $contest_id, '=')
+    ->execute();
+
+
+    $message = array('status' => 'Money' . $wining_amount);
+
+    return $message;
+}
+
+
+
+
+
+
+
+
+    
